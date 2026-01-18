@@ -15,7 +15,7 @@ app.use(cookieParser(process.env.COOKIE_SECRET));
 morgan.token('client-ip', (request) => {
     return request.ip || request.connection.remoteAddress;
 });
-app.use(morgan(':method :url :status :response-time ms - :res[content-length] - :client-ip'));
+app.use(morgan('➜ :method :url :status :response-time ms - :res[content-length] - :client-ip'));
 app.use(helmet());
 app.use(cors({
     origin: 'http://localhost:5173',
@@ -71,5 +71,5 @@ io.on("connection", (socket) => {
     });
 });
 server.listen(process.env.PORT, () => {
-    console.log(`Server running at http://localhost:${process.env.PORT}`);
+    console.log(`➜ Server running at http://localhost:${process.env.PORT}`);
 });
