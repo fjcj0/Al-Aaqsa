@@ -43,19 +43,19 @@ const blockedAgents = [
 export const browserOnly = (request, response, next) => {
     const ua = request.headers["user-agent"] || "";
     if (blockedAgents.some(r => r.test(ua))) {
-        return res.status(403).json({
+        return response.status(403).json({
             success: false,
             message: "Apps, bots, and WebViews are not allowed",
         });
     }
     if (!allowedBrowsers.some(r => r.test(ua))) {
-        return res.status(403).json({
+        return response.status(403).json({
             success: false,
             message: "Only real browsers are allowed",
         });
     }
     if (!request.headers["accept"] || !request.headers["accept-language"] || !request.headers["sec-fetch-site"]) {
-        return res.status(403).json({
+        return response.status(403).json({
             success: false,
             message: "Invalid browser request",
         });
