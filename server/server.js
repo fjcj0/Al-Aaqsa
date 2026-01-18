@@ -6,13 +6,16 @@ import { Server } from "socket.io";
 import helmet from 'helmet';
 import morgan from 'morgan';
 import cors from 'cors';
-import { limiter, speedLimiter, browserOnly } from './tools/DDosProtection.js';
+import { rateLimiter, speedLimiter, browserOnly } from './tools/DDosProtection.js';
 import { socketRateLimit } from './tools/socketLimiter.js';
 import generateCsrfToken from './tools/csrf.js';
 import csrfProtection from './middleware/csrfProtection.js';
 const app = express();
 app.use(cookieParser(process.env.COOKIE_SECRET));
-app.use(morgan("dev"));
+morgan.token('client-ip', (request) => {
+    return request.ip || request.connection.remoteAddress;
+});
+app.use(morgan(':method :url :status :response-time ms - :res[content-length] - :client-ip'));
 app.use(helmet());
 app.use(cors({
     origin: 'http://localhost:5173',
@@ -20,7 +23,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(browserOnly);
-app.use(limiter);
+app.use(rateLimiter);
 app.use(speedLimiter);
 app.use((request, response, next) => {
     if (request.path === "/api/cron" || request.path === "/api/csrf-token") {
@@ -32,8 +35,8 @@ app.get("/api/csrf-token", (request, response) => {
     const csrfToken = generateCsrfToken();
     response.cookie("csrfToken", csrfToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'Strict' : 'Lax',
     });
     response.status(201).json({ csrfToken });
 });

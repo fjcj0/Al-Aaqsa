@@ -1,10 +1,15 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import slowDown from "express-slow-down";
-export const limiter = rateLimit({
+export const rateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: (request) => {
+        const ipPart = ipKeyGenerator(request);
+        const uaPart = request.headers["user-agent"] || "unknown";
+        return `${ipPart}|${uaPart}`;
+    },
     message: {
         success: false,
         message: "Too many requests",
@@ -22,7 +27,7 @@ const allowedBrowsers = [
     /OPR/i,
     /Safari/i,
 ];
-const blockedAgents = [
+const blockedUserAgents = [
     /curl/i,
     /wget/i,
     /postman/i,
@@ -41,24 +46,31 @@ const blockedAgents = [
     /WebView/i,
 ];
 export const browserOnly = (request, response, next) => {
-    const ua = request.headers["user-agent"] || "";
-    if (blockedAgents.some(r => r.test(ua))) {
+    const userAgent = request.headers["user-agent"] || "";
+    if (blockedUserAgents.some(regex => regex.test(userAgent))) {
         return response.status(403).json({
             success: false,
             message: "Apps, bots, and WebViews are not allowed",
         });
     }
-    if (!allowedBrowsers.some(r => r.test(ua))) {
+    if (!allowedBrowsers.some(regex => regex.test(userAgent))) {
         return response.status(403).json({
             success: false,
             message: "Only real browsers are allowed",
         });
     }
-    if (!request.headers["accept"] || !request.headers["accept-language"] || !request.headers["sec-fetch-site"]) {
-        return response.status(403).json({
-            success: false,
-            message: "Invalid browser request",
-        });
+    const requiredHeaders = [
+        "accept",
+        "accept-language",
+        "sec-fetch-site",
+    ];
+    for (const header of requiredHeaders) {
+        if (!request.headers[header]) {
+            return response.status(403).json({
+                success: false,
+                message: "Invalid browser request",
+            });
+        }
     }
     next();
 };
