@@ -15,18 +15,12 @@ export const speedLimiter = slowDown({
     delayAfter: 50,
     delayMs: () => 500,
 });
-const allowedAgents = [
+const allowedBrowsers = [
     /Chrome/i,
     /Firefox/i,
     /Edg/i,
     /OPR/i,
     /Safari/i,
-    /Android/i,
-    /iPhone/i,
-    /iPad/i,
-    /iPod/i,
-    /wv/i,
-    /Mobile/i,
 ];
 const blockedAgents = [
     /curl/i,
@@ -37,23 +31,31 @@ const blockedAgents = [
     /bot/i,
     /spider/i,
     /crawl/i,
+    /ReactNative/i,
+    /FBAN/i,
+    /FBAV/i,
+    /Instagram/i,
+    /TikTok/i,
+    /Snapchat/i,
+    /wv/i,
+    /WebView/i,
 ];
 export const browserOnly = (request, response, next) => {
     const ua = request.headers["user-agent"] || "";
-    if (blockedAgents.some((b) => b.test(ua))) {
-        return response.status(403).json({
+    if (blockedAgents.some(r => r.test(ua))) {
+        return res.status(403).json({
             success: false,
-            message: "Bots or scripts are not allowed",
+            message: "Apps, bots, and WebViews are not allowed",
         });
     }
-    if (!allowedAgents.some((a) => a.test(ua))) {
-        return response.status(403).json({
+    if (!allowedBrowsers.some(r => r.test(ua))) {
+        return res.status(403).json({
             success: false,
-            message: "Only browsers and mobile webviews are allowed",
+            message: "Only real browsers are allowed",
         });
     }
-    if (!request.headers["accept"] || !request.headers["accept-language"]) {
-        return response.status(403).json({
+    if (!request.headers["accept"] || !request.headers["accept-language"] || !request.headers["sec-fetch-site"]) {
+        return res.status(403).json({
             success: false,
             message: "Invalid browser request",
         });
