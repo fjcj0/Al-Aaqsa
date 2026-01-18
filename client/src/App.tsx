@@ -10,9 +10,9 @@ function App() {
     fetchCsrf();
   }, []);
   return (
-    <>
-      <h1>csrf token working</h1>
-    </>
+    <div className="w-screen h-screen flex items-center justify-center text-5xl font-bold text-center">
+      <h1>Website full protection</h1>
+    </div>
   );
 }
 export default App;
