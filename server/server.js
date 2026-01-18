@@ -15,7 +15,7 @@ app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(morgan("dev"));
 app.use(helmet());
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: 'http://localhost:5173',
     credentials: true
 }));
 app.use(express.json());
@@ -33,7 +33,7 @@ app.get("/api/csrf-token", (request, response) => {
     response.cookie("csrfToken", csrfToken, {
         httpOnly: true,
         secure: false,
-        sameSite: "strict",
+        sameSite: "lax",
     });
     response.status(201).json({ csrfToken });
 });
@@ -49,7 +49,7 @@ if (process.env.NODE_ENV !== 'development') {
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: `http://localhost:3000`,
+        origin: `http://localhost:5173`,
         credentials: true
     },
     pingTimeout: 20000,
